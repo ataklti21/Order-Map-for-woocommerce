@@ -62,6 +62,8 @@ add_action( 'plugins_loaded', function () {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		// WooCommerce not active. We keep plugin loaded but features relying on WC should guard themselves.
 	}
+	// Load translations
+	load_plugin_textdomain( 'woocommerce-orders-map', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 } );
 
 // Activation/Deactivation hooks for cron schedules

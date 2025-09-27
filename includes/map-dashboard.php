@@ -80,8 +80,15 @@ add_action( 'rest_api_init', function () {
 		'methods'             => WP_REST_Server::EDITABLE,
 		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
 		'callback'            => function ( WP_REST_Request $request ) {
-			$order_ids = array_map( 'absint', (array) $request->get_param( 'order_ids' ) );
+			$order_ids = array_filter( array_map( 'absint', (array) $request->get_param( 'order_ids' ) ) );
 			$driver_id = absint( $request->get_param( 'driver_id' ) );
+			if ( empty( $order_ids ) || $driver_id <= 0 ) {
+				return new WP_Error( 'wom_invalid_params', __( 'Invalid parameters', 'woocommerce-orders-map' ), array( 'status' => 400 ) );
+			}
+			$user = get_user_by( 'id', $driver_id );
+			if ( ! $user ) {
+				return new WP_Error( 'wom_invalid_driver', __( 'Driver not found', 'woocommerce-orders-map' ), array( 'status' => 404 ) );
+			}
 			foreach ( $order_ids as $oid ) {
 				update_post_meta( $oid, WOM_META_ASSIGNED_DRIVER, (string) $driver_id );
 				if ( ! get_post_meta( $oid, '_wom_assigned_at', true ) ) {
@@ -96,7 +103,10 @@ add_action( 'rest_api_init', function () {
 		'methods'             => WP_REST_Server::EDITABLE,
 		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
 		'callback'            => function ( WP_REST_Request $request ) {
-			$order_ids = array_map( 'absint', (array) $request->get_param( 'order_ids' ) );
+			$order_ids = array_filter( array_map( 'absint', (array) $request->get_param( 'order_ids' ) ) );
+			if ( empty( $order_ids ) ) {
+				return new WP_Error( 'wom_invalid_params', __( 'Invalid parameters', 'woocommerce-orders-map' ), array( 'status' => 400 ) );
+			}
 			foreach ( $order_ids as $oid ) {
 				delete_post_meta( $oid, WOM_META_ASSIGNED_DRIVER );
 			}
