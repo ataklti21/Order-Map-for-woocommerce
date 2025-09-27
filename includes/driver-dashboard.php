@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERROR<?php
+<?php
 /**
  * Driver Dashboard: shortcode and REST endpoints
  */
