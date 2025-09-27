@@ -37,6 +37,16 @@
 		}).then(function (r) { return r.json(); });
 	}
 
+function initiatePod(orderId, method) {
+	var url = WOM_Driver.root + '/driver/orders/' + orderId + '/pod/initiate';
+	return window.fetch(url, {
+		method: 'POST',
+		credentials: 'same-origin',
+		headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': WOM_Driver.nonce },
+		body: JSON.stringify({ method: method })
+	}).then(function(r){ return r.json(); });
+}
+
 	function render(rootId) {
 		var root = document.getElementById(rootId);
 		if (!root) return;
@@ -61,11 +71,17 @@
 					button('Delivered', function () { doUpdate(o.id, 'delivered'); }),
 					button('Failed', function () { doUpdate(o.id, 'failed'); })
 				]);
+				var pod = el('div', { className: 'wom-pod' }, [
+					label('Confirm Delivery via: '),
+					select(['email','sms'], 'email', function (val) { pod._method = val; }),
+					button('Send Link', function () { doPod(o.id, pod._method || 'email'); })
+				]);
 				var card = el('div', { className: 'wom-card' }, [
 					el('div', { className: 'wom-line', text: 'Order #' + o.number + ' — ' + (o.driverStatus || 'assigned') }),
 					el('div', { className: 'wom-line', text: (o.customer && o.customer.name) ? o.customer.name : '' }),
 					el('div', { className: 'wom-line', text: address(o) }),
-					actions
+					actions,
+					pod
 				]);
 				list.appendChild(card);
 			});
@@ -84,6 +100,27 @@
 			var b = el('button', { className: 'button button-secondary', type: 'button', text: label });
 			b.addEventListener('click', onClick);
 			return b;
+		}
+
+		function label(text) {
+			return el('label', { text: text });
+		}
+
+		function select(options, value, onChange) {
+			var s = el('select');
+			(options || []).forEach(function(opt){
+				var o = el('option', { value: opt, text: opt.toUpperCase() });
+				if (opt === value) o.selected = true;
+				s.appendChild(o);
+			});
+			s.addEventListener('change', function(){ onChange && onChange(s.value); });
+			return s;
+		}
+
+		function doPod(orderId, method) {
+			initiatePod(orderId, method).then(function(){
+				alert('Confirmation link sent via ' + method.toUpperCase());
+			});
 		}
 	}
 
