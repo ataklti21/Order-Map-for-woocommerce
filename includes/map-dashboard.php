@@ -36,10 +36,12 @@ function wom_render_orders_map_widget() {
 add_action( 'rest_api_init', function () {
 	register_rest_route( 'wom/v1', '/admin/orders-for-map', array(
 		'methods'             => WP_REST_Server::READABLE,
-		'permission_callback' => function () { return current_user_can( 'manage_woocommerce' ) || current_user_can( 'manage_options' ); },
-		'callback'            => function () {
+		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
+		'callback'            => function ( WP_REST_Request $request ) {
+			$bounds = $request->get_param( 'bounds' ); // {south,west,north,east}
+			$limit  = min( 200, max( 1, absint( $request->get_param( 'limit' ) ) ) );
 			$orders = wc_get_orders( array(
-				'limit'   => 50,
+				'limit'   => $limit,
 				'orderby' => 'date',
 				'order'   => 'DESC',
 				'return'  => 'ids',
@@ -52,6 +54,13 @@ add_action( 'rest_api_init', function () {
 				$lng = get_post_meta( $order_id, '_wom_lng', true );
 				// Only include orders with coords (assumes geocoding done elsewhere)
 				if ( '' === $lat || '' === $lng ) { continue; }
+				if ( is_array( $bounds ) && count( $bounds ) === 4 ) {
+					$south = (float) $bounds['south'];
+					$west  = (float) $bounds['west'];
+					north  = (float) $bounds['north'];
+					east   = (float) $bounds['east'];
+					if ( $lat < $south || $lat > $north || $lng < $west || $lng > $east ) { continue; }
+				}
 				$data[] = array(
 					'id'      => $order_id,
 					'number'  => $order->get_order_number(),
@@ -59,9 +68,39 @@ add_action( 'rest_api_init', function () {
 					'lng'     => (float) $lng,
 					'address' => wc_format_address( $order->get_address( 'shipping' ) ),
 					'status'  => $order->get_status(),
+					'assignedDriver' => (int) get_post_meta( $order_id, WOM_META_ASSIGNED_DRIVER, true ),
 				);
 			}
 			return new WP_REST_Response( $data, 200 );
+		},
+	) );
+
+	// Assign/Unassign bulk
+	register_rest_route( 'wom/v1', '/admin/assign', array(
+		'methods'             => WP_REST_Server::EDITABLE,
+		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
+		'callback'            => function ( WP_REST_Request $request ) {
+			$order_ids = array_map( 'absint', (array) $request->get_param( 'order_ids' ) );
+			$driver_id = absint( $request->get_param( 'driver_id' ) );
+			foreach ( $order_ids as $oid ) {
+				update_post_meta( $oid, WOM_META_ASSIGNED_DRIVER, (string) $driver_id );
+				if ( ! get_post_meta( $oid, '_wom_assigned_at', true ) ) {
+					update_post_meta( $oid, '_wom_assigned_at', time() );
+				}
+			}
+			return new WP_REST_Response( array( 'ok' => true ), 200 );
+		},
+	) );
+
+	register_rest_route( 'wom/v1', '/admin/unassign', array(
+		'methods'             => WP_REST_Server::EDITABLE,
+		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
+		'callback'            => function ( WP_REST_Request $request ) {
+			$order_ids = array_map( 'absint', (array) $request->get_param( 'order_ids' ) );
+			foreach ( $order_ids as $oid ) {
+				delete_post_meta( $oid, WOM_META_ASSIGNED_DRIVER );
+			}
+			return new WP_REST_Response( array( 'ok' => true ), 200 );
 		},
 	) );
 } );
