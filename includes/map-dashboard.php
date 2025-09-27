@@ -29,7 +29,7 @@ function wom_render_orders_map_widget() {
 	wp_enqueue_script( $handle );
 
 	// Container
-	echo '<div id="' . esc_attr( $map_id ) . '" style="height:400px"></div>';
+	echo '<div id="' . esc_attr( $map_id ) . '" style="height:240px"></div>';
 }
 
 // Simple REST endpoint to fetch recent orders with basic location info

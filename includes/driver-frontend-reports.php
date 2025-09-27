@@ -7,6 +7,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Dashboard summary widget
+add_action( 'wp_dashboard_setup', function () {
+	wp_add_dashboard_widget( 'wom_driver_summary_widget', __( 'Driver Delivery Summary', 'woocommerce-orders-map' ), 'wom_render_driver_summary_widget' );
+} );
+
+function wom_render_driver_summary_widget() {
+	if ( ! current_user_can( 'manage_woocommerce' ) && ! current_user_can( 'shop_manager' ) ) {
+		echo esc_html__( 'Insufficient permissions.', 'woocommerce-orders-map' );
+		return;
+	}
+	$start = gmdate( 'Y-m-d', strtotime( '-7 days' ) );
+	$end   = gmdate( 'Y-m-d' );
+	$report = wom_get_driver_report_data( $start, $end, 0 );
+	$completed = (int) $report['completed'];
+	$failed = (int) $report['failed'];
+	$rate = $report['completion_rate'];
+	echo '<ul style="margin:0">';
+	echo '<li>' . esc_html__( 'Last 7 days', 'woocommerce-orders-map' ) . '</li>';
+	echo '<li>' . esc_html__( 'Completed', 'woocommerce-orders-map' ) . ': ' . (int) $completed . '</li>';
+	echo '<li>' . esc_html__( 'Failed', 'woocommerce-orders-map' ) . ': ' . (int) $failed . '</li>';
+	echo '<li>' . esc_html__( 'Completion Rate', 'woocommerce-orders-map' ) . ': ' . esc_html( $rate ) . '%</li>';
+	echo '</ul>';
+}
+
 // Admin menu entry under WooCommerce -> Reports
 add_action( 'admin_menu', function () {
 	add_submenu_page(
