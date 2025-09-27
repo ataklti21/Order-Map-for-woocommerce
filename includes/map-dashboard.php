@@ -1,0 +1,1 @@
+<content of includes/map-dashboard.php>

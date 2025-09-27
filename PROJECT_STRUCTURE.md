@@ -1,0 +1,1 @@
+<content of PROJECT_STRUCTURE.md>

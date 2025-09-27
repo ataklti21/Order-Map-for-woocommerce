@@ -1,0 +1,1 @@
+<content of INSTALLATION.md>
