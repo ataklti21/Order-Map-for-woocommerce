@@ -48,6 +48,8 @@ if ( ! defined( 'WOM_META_POD_METHOD' ) ) {
 
 // Bootstrap feature modules
 require_once WOM_PLUGIN_PATH . 'includes/driver-dashboard.php';
+require_once WOM_PLUGIN_PATH . 'includes/settings.php';
+require_once WOM_PLUGIN_PATH . 'includes/geocoding.php';
 
 // Optionally, future modules can be required here
 require_once WOM_PLUGIN_PATH . 'includes/map-dashboard.php';
@@ -59,6 +61,17 @@ add_action( 'plugins_loaded', function () {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		// WooCommerce not active. We keep plugin loaded but features relying on WC should guard themselves.
 	}
+} );
+
+// Activation/Deactivation hooks for cron schedules
+register_activation_hook( WOM_PLUGIN_FILE, function () {
+	if ( ! wp_next_scheduled( 'wom_geocode_backfill_event' ) ) {
+		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'hourly', 'wom_geocode_backfill_event' );
+	}
+} );
+
+register_deactivation_hook( WOM_PLUGIN_FILE, function () {
+	wp_clear_scheduled_hook( 'wom_geocode_backfill_event' );
 } );
 
 // No closing PHP tag to avoid accidental output
