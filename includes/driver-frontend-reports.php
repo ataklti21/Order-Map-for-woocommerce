@@ -78,6 +78,20 @@ function wom_render_driver_reports_page() {
 			<a class="button" href="<?php echo esc_url( $export_url ); ?>"><?php esc_html_e( 'Export CSV', 'woocommerce-orders-map' ); ?></a>
 		</form>
 
+		<h2><?php esc_html_e( 'Chart', 'woocommerce-orders-map' ); ?></h2>
+		<div style="max-width:920px">
+			<label>
+				<?php esc_html_e( 'Graph Type', 'woocommerce-orders-map' ); ?>
+				<select id="wom-graph-type">
+					<option value="bar">Bar</option>
+					<option value="line">Line</option>
+					<option value="pie">Pie</option>
+					<option value="doughnut">Doughnut</option>
+				</select>
+			</label>
+			<canvas id="wom-report-chart" height="120"></canvas>
+		</div>
+
 		<h2><?php esc_html_e( 'Summary', 'woocommerce-orders-map' ); ?></h2>
 		<ul>
 			<li><?php esc_html_e( 'Completed', 'woocommerce-orders-map' ); ?>: <?php echo (int) $report['completed']; ?></li>
@@ -111,6 +125,27 @@ function wom_render_driver_reports_page() {
 		</table>
 	</div>
 	<?php
+    // Enqueue Chart.js from CDN and add inline script to render chart
+    wp_enqueue_script( 'chartjs', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true );
+    $chart_data = array(
+        'labels' => array( __( 'Completed', 'woocommerce-orders-map' ), __( 'Failed', 'woocommerce-orders-map' ) ),
+        'values' => array( (int) $report['completed'], (int) $report['failed'] ),
+    );
+    $script = 'document.addEventListener("DOMContentLoaded",function(){
+        var ctx = document.getElementById("wom-report-chart").getContext("2d");
+        var typeSel = document.getElementById("wom-graph-type");
+        var config = {
+            type: "bar",
+            data: { labels: ' . wp_json_encode( $chart_data['labels'] ) . ', datasets: [{ label: "Deliveries", data: ' . wp_json_encode( $chart_data['values'] ) . ', backgroundColor: ["#36a2eb","#ff6384"] }] },
+            options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
+        };
+        var chart = new Chart(ctx, config);
+        typeSel.addEventListener("change", function(){
+            chart.config.type = typeSel.value;
+            chart.update();
+        });
+    });';
+    wp_add_inline_script( 'chartjs', $script );
 }
 
 // REST endpoint for JSON report
