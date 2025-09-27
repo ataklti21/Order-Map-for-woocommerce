@@ -21,8 +21,10 @@ add_action( 'wom_send_pod_confirmation', function ( $order_id, $method, $confirm
 	if ( 'email' === $method ) {
 		$to      = $order->get_billing_email();
 		$subject = __( 'Confirm your delivery', 'woocommerce-orders-map' );
-		$body    = sprintf( __( 'Please confirm you received order #%1$s by clicking: %2$s', 'woocommerce-orders-map' ), $order->get_order_number(), esc_url( $confirm_url ) );
-		wp_mail( $to, $subject, $body );
+		$body    = '<p>' . sprintf( __( 'Please confirm you received order #%s.', 'woocommerce-orders-map' ), esc_html( $order->get_order_number() ) ) . '</p>';
+		$body   .= '<p><a href="' . esc_url( $confirm_url ) . '">' . esc_html__( 'Confirm Delivery', 'woocommerce-orders-map' ) . '</a></p>';
+		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		wp_mail( $to, $subject, $body, $headers );
 	}
 
 	if ( 'sms' === $method ) {

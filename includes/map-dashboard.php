@@ -34,18 +34,23 @@ function wom_render_orders_map_widget() {
 
 // Simple REST endpoint to fetch recent orders with basic location info
 add_action( 'rest_api_init', function () {
-	register_rest_route( 'wom/v1', '/admin/orders-for-map', array(
+    register_rest_route( 'wom/v1', '/admin/orders-for-map', array(
 		'methods'             => WP_REST_Server::READABLE,
 		'permission_callback' => function () { return current_user_can( 'wom_manage_assignments' ); },
 		'callback'            => function ( WP_REST_Request $request ) {
-			$bounds = $request->get_param( 'bounds' ); // {south,west,north,east}
-			$limit  = min( 200, max( 1, absint( $request->get_param( 'limit' ) ) ) );
-			$orders = wc_get_orders( array(
-				'limit'   => $limit,
-				'orderby' => 'date',
-				'order'   => 'DESC',
-				'return'  => 'ids',
-			) );
+            $bounds = $request->get_param( 'bounds' ); // {south,west,north,east}
+            $limit  = min( 200, max( 1, absint( $request->get_param( 'limit' ) ) ) );
+
+            $cache_key = 'wom_map_feed_' . md5( wp_json_encode( array( 'b' => $bounds, 'l' => $limit ) ) );
+            $cached    = get_transient( $cache_key );
+            if ( $cached ) { return new WP_REST_Response( $cached, 200 ); }
+
+            $orders = wc_get_orders( array(
+                'limit'   => $limit,
+                'orderby' => 'date',
+                'order'   => 'DESC',
+                'return'  => 'ids',
+            ) );
 			$data = array();
 			foreach ( $orders as $order_id ) {
 				$order = wc_get_order( $order_id );
@@ -71,7 +76,8 @@ add_action( 'rest_api_init', function () {
 					'assignedDriver' => (int) get_post_meta( $order_id, WOM_META_ASSIGNED_DRIVER, true ),
 				);
 			}
-			return new WP_REST_Response( $data, 200 );
+            set_transient( $cache_key, $data, MINUTE_IN_SECONDS );
+            return new WP_REST_Response( $data, 200 );
 		},
 	) );
 
@@ -89,12 +95,14 @@ add_action( 'rest_api_init', function () {
 			if ( ! $user ) {
 				return new WP_Error( 'wom_invalid_driver', __( 'Driver not found', 'woocommerce-orders-map' ), array( 'status' => 404 ) );
 			}
-			foreach ( $order_ids as $oid ) {
+            foreach ( $order_ids as $oid ) {
 				update_post_meta( $oid, WOM_META_ASSIGNED_DRIVER, (string) $driver_id );
 				if ( ! get_post_meta( $oid, '_wom_assigned_at', true ) ) {
 					update_post_meta( $oid, '_wom_assigned_at', time() );
 				}
 			}
+            // Bust map cache
+            global $wpdb; $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wom_map_feed_%' OR option_name LIKE '_transient_timeout_wom_map_feed_%'" );
 			return new WP_REST_Response( array( 'ok' => true ), 200 );
 		},
 	) );
@@ -107,9 +115,10 @@ add_action( 'rest_api_init', function () {
 			if ( empty( $order_ids ) ) {
 				return new WP_Error( 'wom_invalid_params', __( 'Invalid parameters', 'woocommerce-orders-map' ), array( 'status' => 400 ) );
 			}
-			foreach ( $order_ids as $oid ) {
+            foreach ( $order_ids as $oid ) {
 				delete_post_meta( $oid, WOM_META_ASSIGNED_DRIVER );
 			}
+            global $wpdb; $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wom_map_feed_%' OR option_name LIKE '_transient_timeout_wom_map_feed_%'" );
 			return new WP_REST_Response( array( 'ok' => true ), 200 );
 		},
 	) );

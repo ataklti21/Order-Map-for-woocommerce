@@ -127,23 +127,19 @@ function wom_render_driver_reports_page() {
 	<?php
     // Enqueue Chart.js from CDN and add inline script to render chart
     wp_enqueue_script( 'chartjs', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true );
-    $chart_data = array(
-        'labels' => array( __( 'Completed', 'woocommerce-orders-map' ), __( 'Failed', 'woocommerce-orders-map' ) ),
-        'values' => array( (int) $report['completed'], (int) $report['failed'] ),
-    );
+    $chart_rows = $report['rows'];
     $script = 'document.addEventListener("DOMContentLoaded",function(){
         var ctx = document.getElementById("wom-report-chart").getContext("2d");
         var typeSel = document.getElementById("wom-graph-type");
-        var config = {
-            type: "bar",
-            data: { labels: ' . wp_json_encode( $chart_data['labels'] ) . ', datasets: [{ label: "Deliveries", data: ' . wp_json_encode( $chart_data['values'] ) . ', backgroundColor: ["#36a2eb","#ff6384"] }] },
-            options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
-        };
+        function aggregate(rows){
+          var map = { Completed: 0, Failed: 0 };
+          (rows||[]).forEach(function(r){ if(r.driver_status==="delivered") map.Completed++; else if(r.driver_status==="failed") map.Failed++; });
+          return { labels: Object.keys(map), values: Object.values(map) };
+        }
+        var agg = aggregate(' . wp_json_encode( $chart_rows ) . ');
+        var config = { type: "bar", data: { labels: agg.labels, datasets: [{ label: "Deliveries", data: agg.values, backgroundColor: ["#36a2eb","#ff6384"] }] }, options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } } };
         var chart = new Chart(ctx, config);
-        typeSel.addEventListener("change", function(){
-            chart.config.type = typeSel.value;
-            chart.update();
-        });
+        typeSel.addEventListener("change", function(){ chart.config.type = typeSel.value; chart.update(); });
     });';
     wp_add_inline_script( 'chartjs', $script );
 }
