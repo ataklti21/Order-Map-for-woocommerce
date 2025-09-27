@@ -50,7 +50,7 @@ if ( ! defined( 'WOM_META_POD_METHOD' ) ) {
 require_once WOM_PLUGIN_PATH . 'includes/driver-dashboard.php';
 
 // Optionally, future modules can be required here
-// require_once WOM_PLUGIN_PATH . 'includes/map-dashboard.php';
+require_once WOM_PLUGIN_PATH . 'includes/map-dashboard.php';
 // require_once WOM_PLUGIN_PATH . 'includes/driver-frontend-reports.php';
 require_once WOM_PLUGIN_PATH . 'includes/notifications.php';
 
