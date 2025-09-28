@@ -93,9 +93,19 @@ add_action( 'plugins_loaded', function () {
 
 // Activation/Deactivation hooks for cron schedules
 register_activation_hook( WOM_PLUGIN_FILE, function () {
-	if ( ! wp_next_scheduled( 'wom_geocode_backfill_event' ) ) {
-		wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'hourly', 'wom_geocode_backfill_event' );
-	}
+    // Dependency checks
+    if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
+        deactivate_plugins( plugin_basename( WOM_PLUGIN_FILE ) );
+        wp_die( esc_html__( 'WooCommerce Orders Map requires PHP 7.4 or higher.', 'woocommerce-orders-map' ) );
+    }
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        deactivate_plugins( plugin_basename( WOM_PLUGIN_FILE ) );
+        wp_die( esc_html__( 'WooCommerce Orders Map requires WooCommerce to be active.', 'woocommerce-orders-map' ) );
+    }
+
+    if ( ! wp_next_scheduled( 'wom_geocode_backfill_event' ) ) {
+        wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'hourly', 'wom_geocode_backfill_event' );
+    }
 } );
 
 register_deactivation_hook( WOM_PLUGIN_FILE, function () {

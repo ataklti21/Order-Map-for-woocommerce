@@ -170,13 +170,16 @@ function wom_get_driver_report_data( $start, $end, $driver_id = 0 ) {
 	$start_ts = strtotime( $start . ' 00:00:00' );
 	$end_ts   = strtotime( $end . ' 23:59:59' );
 
-	$args = array(
-		'limit'      => -1,
-		'orderby'    => 'date',
-		'order'      => 'DESC',
-		'return'     => 'ids',
-		'date_created' => $start_ts && $end_ts ? wc_string_to_datetime( $start )->getTimestamp() . '...' . wc_string_to_datetime( $end )->getTimestamp() : '',
-	);
+    $args = array(
+        'limit'      => -1,
+        'orderby'    => 'date',
+        'order'      => 'DESC',
+        'return'     => 'ids',
+    );
+    if ( $start_ts && $end_ts ) {
+        // HPOS-safe date range
+        $args['date_created'] = array( 'after' => gmdate( 'Y-m-d H:i:s', $start_ts ), 'before' => gmdate( 'Y-m-d H:i:s', $end_ts ) );
+    }
 
 	$meta_query = array();
 	if ( $driver_id ) {
