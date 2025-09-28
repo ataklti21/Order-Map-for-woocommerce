@@ -84,8 +84,8 @@ add_action( 'rest_api_init', function () {
 				if ( is_array( $bounds ) && count( $bounds ) === 4 ) {
 					$south = (float) $bounds['south'];
 					$west  = (float) $bounds['west'];
-					north  = (float) $bounds['north'];
-					east   = (float) $bounds['east'];
+					$north = (float) $bounds['north'];
+					$east  = (float) $bounds['east'];
 					if ( $lat < $south || $lat > $north || $lng < $west || $lng > $east ) { continue; }
 				}
 				$data[] = array(
@@ -145,5 +145,3 @@ add_action( 'rest_api_init', function () {
 		},
 	) );
 } );
-
-<content of includes/map-dashboard.php>

@@ -312,5 +312,3 @@ function wom_rest_confirm_pod_by_token( WP_REST_Request $request ) {
 
 	return new WP_REST_Response( array( 'ok' => true ), 200 );
 }
-
-<content of includes/driver-dashboard.php>

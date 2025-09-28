@@ -103,4 +103,3 @@ register_deactivation_hook( WOM_PLUGIN_FILE, function () {
 } );
 
 // No closing PHP tag to avoid accidental output
-<content of woocommerce-orders-map.php>
