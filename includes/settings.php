@@ -20,6 +20,8 @@ add_action( 'admin_init', function () {
 	register_setting( 'wom_settings', 'wom_settings', array( 'type' => 'array', 'sanitize_callback' => 'wom_sanitize_settings' ) );
 
 	add_settings_section( 'wom_section_api', __( 'API Keys', 'woocommerce-orders-map' ), '__return_false', 'wom_settings' );
+	add_settings_field( 'map_provider', __( 'Map Provider', 'woocommerce-orders-map' ), 'wom_field_map_provider', 'wom_settings', 'wom_section_api' );
+	add_settings_field( 'maps_api_key', __( 'Maps JS API Key (Google)', 'woocommerce-orders-map' ), 'wom_field_maps_api_key', 'wom_settings', 'wom_section_api' );
 	add_settings_field( 'geocoding_provider', __( 'Geocoding Provider', 'woocommerce-orders-map' ), 'wom_field_geocoder', 'wom_settings', 'wom_section_api' );
 	add_settings_field( 'geocoding_api_key', __( 'API Key', 'woocommerce-orders-map' ), 'wom_field_api_key', 'wom_settings', 'wom_section_api' );
 
@@ -30,6 +32,8 @@ add_action( 'admin_init', function () {
 
 function wom_sanitize_settings( $input ) {
 	$output = array();
+	$output['map_provider']         = isset( $input['map_provider'] ) ? sanitize_text_field( $input['map_provider'] ) : 'osm';
+	$output['maps_api_key']         = isset( $input['maps_api_key'] ) ? sanitize_text_field( $input['maps_api_key'] ) : '';
 	$output['geocoding_provider']   = isset( $input['geocoding_provider'] ) ? sanitize_text_field( $input['geocoding_provider'] ) : 'nominatim';
 	$output['geocoding_api_key']    = isset( $input['geocoding_api_key'] ) ? sanitize_text_field( $input['geocoding_api_key'] ) : '';
 	$output['enable_pod']           = ! empty( $input['enable_pod'] ) ? 1 : 0;
@@ -39,6 +43,8 @@ function wom_sanitize_settings( $input ) {
 
 function wom_get_settings() {
 	$defaults = array(
+		'map_provider'         => 'osm',
+		'maps_api_key'         => '',
 		'geocoding_provider'   => 'nominatim',
 		'geocoding_api_key'    => '',
 		'enable_pod'           => 1,
@@ -90,6 +96,19 @@ function wom_field_geocoder() {
 function wom_field_api_key() {
 	$opts = wom_get_settings();
 	echo '<input type="text" class="regular-text" name="wom_settings[geocoding_api_key]" value="' . esc_attr( $opts['geocoding_api_key'] ) . '" />';
+}
+
+function wom_field_map_provider() {
+	$opts = wom_get_settings();
+	echo '<select name="wom_settings[map_provider]">';
+	echo '<option value="osm"' . selected( $opts['map_provider'], 'osm', false ) . '>OpenStreetMap (Leaflet)</option>';
+	echo '<option value="google"' . selected( $opts['map_provider'], 'google', false ) . '>Google Maps</option>';
+	echo '</select>';
+}
+
+function wom_field_maps_api_key() {
+	$opts = wom_get_settings();
+	echo '<input type="text" class="regular-text" name="wom_settings[maps_api_key]" value="' . esc_attr( $opts['maps_api_key'] ) . '" />';
 }
 
 function wom_field_enable_pod() {

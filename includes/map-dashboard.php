@@ -16,17 +16,39 @@ function wom_render_orders_map_widget() {
 	$handle = 'wom-admin-map';
 	$ver    = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : WOM_PLUGIN_VERSION;
 
-	// Leaflet CSS/JS (CDN). In production consider bundling locally or using WordPress packages.
-	wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
-	wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
+	$opts = function_exists( 'wom_get_settings' ) ? wom_get_settings() : array( 'map_provider' => 'osm', 'maps_api_key' => '' );
+	$provider = isset( $opts['map_provider'] ) ? $opts['map_provider'] : 'osm';
+	$maps_api_key = isset( $opts['maps_api_key'] ) ? $opts['maps_api_key'] : '';
 
-	wp_register_script( $handle, WOM_PLUGIN_URL . 'assets/admin-map.js', array( 'leaflet' ), $ver, true );
-	$settings = array(
-		'root'  => esc_url_raw( rest_url( 'wom/v1' ) ),
-		'nonce' => wp_create_nonce( 'wp_rest' ),
-	);
-	wp_localize_script( $handle, 'WOM_AdminMap', $settings );
-	wp_enqueue_script( $handle );
+	if ( 'google' === $provider ) {
+		// Google Maps JS API
+		$gmaps_url = add_query_arg( array(
+			'key'      => $maps_api_key,
+			'v'        => 'quarterly',
+			'libraries'=> 'marker',
+		), 'https://maps.googleapis.com/maps/api/js' );
+		wp_enqueue_script( 'google-maps', $gmaps_url, array(), null, true );
+		wp_register_script( $handle . '-google', WOM_PLUGIN_URL . 'assets/admin-map-google.js', array( 'google-maps' ), $ver, true );
+		$settings = array(
+			'root'     => esc_url_raw( rest_url( 'wom/v1' ) ),
+			'nonce'    => wp_create_nonce( 'wp_rest' ),
+			'provider' => 'google',
+		);
+		wp_localize_script( $handle . '-google', 'WOM_AdminMap', $settings );
+		wp_enqueue_script( $handle . '-google' );
+	} else {
+		// Leaflet CSS/JS (CDN)
+		wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
+		wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
+		wp_register_script( $handle, WOM_PLUGIN_URL . 'assets/admin-map.js', array( 'leaflet' ), $ver, true );
+		$settings = array(
+			'root'     => esc_url_raw( rest_url( 'wom/v1' ) ),
+			'nonce'    => wp_create_nonce( 'wp_rest' ),
+			'provider' => 'osm',
+		);
+		wp_localize_script( $handle, 'WOM_AdminMap', $settings );
+		wp_enqueue_script( $handle );
+	}
 
 	// Container
 	echo '<div id="' . esc_attr( $map_id ) . '" style="height:240px"></div>';
