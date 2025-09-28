@@ -52,6 +52,14 @@ function requestCustomerLocation(orderId, method){
 	return window.fetch(url, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-WP-Nonce':WOM_Driver.nonce}, body: JSON.stringify({ method: method }) }).then(function(r){ return r.json(); });
 }
 
+function shareDriverLocation(orderId){
+	if(!navigator.geolocation) { alert('Geolocation not supported'); return; }
+	navigator.geolocation.getCurrentPosition(function(p){
+		var url = WOM_Driver.root + '/driver/orders/' + orderId + '/location';
+		window.fetch(url, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-WP-Nonce':WOM_Driver.nonce}, body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude }) }).then(function(r){ return r.json(); }).then(function(){ alert('Driver location shared'); });
+	});
+}
+
 	function render(rootId) {
 		var root = document.getElementById(rootId);
 		if (!root) return;
@@ -84,7 +92,8 @@ function requestCustomerLocation(orderId, method){
 				var loc = el('div', { className: 'wom-loc' }, [
 					label('Request Customer Location via: '),
 					select(['email','sms'], 'email', function (val) { loc._method = val; }),
-					button('Request Location', function () { doLoc(o.id, loc._method || 'email'); })
+					button('Request Location', function () { doLoc(o.id, loc._method || 'email'); }),
+					button('Share My Location', function(){ shareDriverLocation(o.id); })
 				]);
 				var card = el('div', { className: 'wom-card' }, [
 					el('div', { className: 'wom-line', text: 'Order #' + o.number + ' — ' + (o.driverStatus || 'assigned') }),

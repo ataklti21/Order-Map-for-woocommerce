@@ -60,6 +60,15 @@ if ( ! defined( 'WOM_META_CUSTOMER_LNG' ) ) {
 if ( ! defined( 'WOM_META_CUSTOMER_LOC_AT' ) ) {
 	define( 'WOM_META_CUSTOMER_LOC_AT', '_wom_customer_loc_at' );
 }
+if ( ! defined( 'WOM_META_DRIVER_LAT' ) ) {
+	define( 'WOM_META_DRIVER_LAT', '_wom_driver_lat' );
+}
+if ( ! defined( 'WOM_META_DRIVER_LNG' ) ) {
+	define( 'WOM_META_DRIVER_LNG', '_wom_driver_lng' );
+}
+if ( ! defined( 'WOM_META_DRIVER_LOC_AT' ) ) {
+	define( 'WOM_META_DRIVER_LOC_AT', '_wom_driver_loc_at' );
+}
 
 // Bootstrap feature modules
 require_once WOM_PLUGIN_PATH . 'includes/driver-dashboard.php';
