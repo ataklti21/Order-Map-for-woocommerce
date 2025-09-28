@@ -47,6 +47,11 @@ function initiatePod(orderId, method) {
 	}).then(function(r){ return r.json(); });
 }
 
+function requestCustomerLocation(orderId, method){
+	var url = WOM_Driver.root + '/driver/orders/' + orderId + '/request-location';
+	return window.fetch(url, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-WP-Nonce':WOM_Driver.nonce}, body: JSON.stringify({ method: method }) }).then(function(r){ return r.json(); });
+}
+
 	function render(rootId) {
 		var root = document.getElementById(rootId);
 		if (!root) return;
@@ -76,12 +81,18 @@ function initiatePod(orderId, method) {
 					select(['email','sms'], 'email', function (val) { pod._method = val; }),
 					button('Send Link', function () { doPod(o.id, pod._method || 'email'); })
 				]);
+				var loc = el('div', { className: 'wom-loc' }, [
+					label('Request Customer Location via: '),
+					select(['email','sms'], 'email', function (val) { loc._method = val; }),
+					button('Request Location', function () { doLoc(o.id, loc._method || 'email'); })
+				]);
 				var card = el('div', { className: 'wom-card' }, [
 					el('div', { className: 'wom-line', text: 'Order #' + o.number + ' — ' + (o.driverStatus || 'assigned') }),
 					el('div', { className: 'wom-line', text: (o.customer && o.customer.name) ? o.customer.name : '' }),
 					el('div', { className: 'wom-line', text: address(o) }),
 					actions,
-					pod
+					pod,
+					loc
 				]);
 				list.appendChild(card);
 			});
@@ -120,6 +131,12 @@ function initiatePod(orderId, method) {
 		function doPod(orderId, method) {
 			initiatePod(orderId, method).then(function(){
 				alert('Confirmation link sent via ' + method.toUpperCase());
+			});
+		}
+
+		function doLoc(orderId, method){
+			requestCustomerLocation(orderId, method).then(function(){
+				alert('Location request sent via ' + method.toUpperCase());
 			});
 		}
 	}

@@ -45,12 +45,28 @@ if ( ! defined( 'WOM_META_POD_CONFIRMED' ) ) {
 if ( ! defined( 'WOM_META_POD_METHOD' ) ) {
 	define( 'WOM_META_POD_METHOD', '_wom_pod_method' );
 }
+if ( ! defined( 'WOM_META_TRACK_TOKEN' ) ) {
+	define( 'WOM_META_TRACK_TOKEN', '_wom_track_token' );
+}
+if ( ! defined( 'WOM_META_TRACK_EXPIRES' ) ) {
+	define( 'WOM_META_TRACK_EXPIRES', '_wom_track_expires' );
+}
+if ( ! defined( 'WOM_META_CUSTOMER_LAT' ) ) {
+	define( 'WOM_META_CUSTOMER_LAT', '_wom_customer_lat' );
+}
+if ( ! defined( 'WOM_META_CUSTOMER_LNG' ) ) {
+	define( 'WOM_META_CUSTOMER_LNG', '_wom_customer_lng' );
+}
+if ( ! defined( 'WOM_META_CUSTOMER_LOC_AT' ) ) {
+	define( 'WOM_META_CUSTOMER_LOC_AT', '_wom_customer_loc_at' );
+}
 
 // Bootstrap feature modules
 require_once WOM_PLUGIN_PATH . 'includes/driver-dashboard.php';
 require_once WOM_PLUGIN_PATH . 'includes/settings.php';
 require_once WOM_PLUGIN_PATH . 'includes/geocoding.php';
 require_once WOM_PLUGIN_PATH . 'includes/roles.php';
+require_once WOM_PLUGIN_PATH . 'includes/tracking.php';
 
 // Optionally, future modules can be required here
 require_once WOM_PLUGIN_PATH . 'includes/map-dashboard.php';
