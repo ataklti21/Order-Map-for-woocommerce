@@ -125,6 +125,9 @@ add_action( 'init', function () {
     add_shortcode( 'wom_customer_tracking', function () {
         $token = isset( $_GET['token'] ) ? sanitize_text_field( wp_unslash( $_GET['token'] ) ) : '';
         ob_start();
+        // Ensure Leaflet is available for the customer tracking map
+        wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
+        wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
         echo '<div id="wom-customer-track"></div>';
         echo '<script>(function(){
             var root=' . wp_json_encode( esc_url_raw( rest_url( 'wom/v1' ) ) ) . ';
@@ -134,11 +137,12 @@ add_action( 'init', function () {
             function get(u){return fetch(u).then(function(r){return r.json();});}
             function g(cb){if(!navigator.geolocation){cb(null);return;}navigator.geolocation.getCurrentPosition(function(p){cb({lat:p.coords.latitude,lng:p.coords.longitude});},function(){cb(null);});}
             function post(u,d){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).then(function(r){return r.json();});}
+            function whenLeaflet(cb){ if(typeof L !== "undefined"){ cb(); } else { setTimeout(function(){ whenLeaflet(cb); }, 200); } }
             function renderTrack(q){
                 var url = root + "/track" + q;
                 get(url).then(function(data){
                     if(data && data.orderId){
-                        if(typeof L !== "undefined"){
+                        whenLeaflet(function(){
                             var mapEl=document.getElementById("wom-map");
                             var map = L.map(mapEl).setView([51.505,-0.09], 12);
                             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
@@ -152,7 +156,7 @@ add_action( 'init', function () {
                                 });
                             }
                             upd(); setInterval(upd, 20000);
-                        }
+                        });
                     } else { alert("Not found. Check details."); }
                 });
             }

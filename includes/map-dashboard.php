@@ -20,7 +20,7 @@ function wom_render_orders_map_widget() {
 	$provider = isset( $opts['map_provider'] ) ? $opts['map_provider'] : 'osm';
 	$maps_api_key = isset( $opts['maps_api_key'] ) ? $opts['maps_api_key'] : '';
 
-	if ( 'google' === $provider ) {
+    if ( 'google' === $provider && ! empty( $maps_api_key ) ) {
 		// Google Maps JS API
 		$gmaps_url = add_query_arg( array(
 			'key'      => $maps_api_key,
