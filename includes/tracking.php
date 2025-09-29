@@ -138,10 +138,10 @@ add_action( 'init', function () {
                 var url = root + "/track" + q;
                 get(url).then(function(data){
                     if(data && data.orderId){
-                        if(typeof L !== 'undefined'){
+                        if(typeof L !== "undefined"){
                             var mapEl=document.getElementById("wom-map");
                             var map = L.map(mapEl).setView([51.505,-0.09], 12);
-                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
                             var markers=[];
                             function upd(){
                                 get(url).then(function(d){
