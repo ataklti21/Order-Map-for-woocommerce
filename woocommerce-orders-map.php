@@ -83,12 +83,16 @@ require_once WOM_PLUGIN_PATH . 'includes/driver-frontend-reports.php';
 require_once WOM_PLUGIN_PATH . 'includes/notifications.php';
 
 // Ensure WooCommerce is active (soft check)
+// Soft WooCommerce presence check at plugins_loaded
 add_action( 'plugins_loaded', function () {
-	if ( ! class_exists( 'WooCommerce' ) ) {
-		// WooCommerce not active. We keep plugin loaded but features relying on WC should guard themselves.
-	}
-	// Load translations
-	load_plugin_textdomain( 'woocommerce-orders-map', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        // WooCommerce not active. We keep plugin loaded but features relying on WC should guard themselves.
+    }
+} );
+
+// Per WP 6.7, load textdomain at init or later
+add_action( 'init', function () {
+    load_plugin_textdomain( 'woocommerce-orders-map', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 } );
 
 // Activation/Deactivation hooks for cron schedules
